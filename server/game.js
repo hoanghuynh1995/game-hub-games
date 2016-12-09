@@ -12,11 +12,11 @@ var newGame = function(roomId,player1Id,player2Id){
     game[roomId].player2 = {id:player2Id,pos:{x:770,y:480/2}};
     game[roomId].ballPos = {x:400,y:240};
     game[roomId].ballSpeed = 10;
-    game[roomId].endGame = false;
     game[roomId].transferredData = {};
     game[roomId].ballDir = {x:0,y:0};
     game[roomId].ballDir.x = randomIntFromInterval(1,10);
     game[roomId].ballDir.y = game[roomId].ballDir.x/randomIntFromInterval(1,5);
+    game[roomId].winner = 0;
 }
 
 var players = {};
@@ -52,6 +52,12 @@ var calcBallPos = function(roomId){
     }
     game[roomId].ballPos.x += game[roomId].ballDir.x;
     game[roomId].ballPos.y += game[roomId].ballDir.y;
+    if(game[roomId].ballPos.x <= 10){
+        game[roomId].winner = 2;
+    }
+    if(game[roomId].ballPos.x >= 776){
+        game[roomId].winner = 1;
+    }
     game[roomId].transferredData = game[roomId].ballPos;
 }
 var calcBallDir = function(roomId){

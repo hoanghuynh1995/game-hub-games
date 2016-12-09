@@ -21,12 +21,6 @@ io.on('connection', function(socket){
     socket.on('disconnect', function(){
         console.log("Player Disconnected");
         delete game.players[playerId];
-        rooms.forEach(function(item,index){
-            if(item.hostName == playerId){
-                io.emit('removeRoom',item);
-                rooms.splice(index, 1);
-            }
-        });
         if(io.sockets.adapter.rooms[roomId] == null){
             delete game.gameList[roomId];
         }
@@ -36,10 +30,10 @@ io.on('connection', function(socket){
         //io.sockets.adapter.rooms[roomId].sockets;
     });
     socket.on('playerMoved',function(data){
-		data.id = socket.id;
+        data.id = socket.id;
         game.updatePlayer(roomId,data);
-		socket.broadcast.emit('playerMoved',data);
-	});
+        socket.broadcast.emit('playerMoved',data);
+    });
     socket.on('ready', function(){
         game.playerReady(playerId);
         for(var i=0;i<Object.keys(io.sockets.adapter.rooms[roomId].sockets).length;i++){
@@ -54,6 +48,16 @@ io.on('connection', function(socket){
         io.to(Object.keys(io.sockets.adapter.rooms[roomId].sockets)[1]).emit('startGame',{player:2});
         //send ball data interval
         var refreshId = setInterval(function() {
+            if(game.gameList[roomId].winner != 0){
+                clearInterval(refreshId);
+                if(game.gameList[roomId].winner == 1){
+                    io.to(Object.keys(io.sockets.adapter.rooms[roomId].sockets)[0]).emit('endGame',{win:true});
+                    io.to(Object.keys(io.sockets.adapter.rooms[roomId].sockets)[1]).emit('endGame',{win:false});
+                }else{
+                    io.to(Object.keys(io.sockets.adapter.rooms[roomId].sockets)[0]).emit('endGame',{win:false});
+                    io.to(Object.keys(io.sockets.adapter.rooms[roomId].sockets)[1]).emit('endGame',{win:true});
+                }
+            }
             if (io.sockets.adapter.rooms[roomId] == null) {
                 clearInterval(refreshId);
             }else {

@@ -51,6 +51,7 @@ public class Pong extends ApplicationAdapter {
 	private String state = STATE_WAITING;
 	private Socket socket;
 
+	private String result = "";
 	MyFileHandleResolver fileHandleResolver;
 
 	public Pong(Socket socket){
@@ -105,6 +106,7 @@ public class Pong extends ApplicationAdapter {
 			opponent.draw(batch);
 		}
 		if(state == STATE_WAITING){
+			font.getData().setScale(3f);
 			font.draw(batch,"Tap to ready",800/2 - 100,480/2);
 			if(Gdx.input.isTouched()) {
 				socket.emit("ready");
@@ -116,7 +118,7 @@ public class Pong extends ApplicationAdapter {
 				socket.emit("onCollision");
 			}
 		}else if(state== STATE_ENDED){
-			font.draw(batch,"End game",800/2 - 40,480/2);
+			font.draw(batch,result,800/2 - 40,480/2);
 		}
 		batch.end();
 	}
@@ -227,6 +229,21 @@ public class Pong extends ApplicationAdapter {
 				JSONObject objects = (JSONObject) args[0];
 				try {
 					ball.updatePosition((float)(objects.getDouble("x")),(float)(objects.getDouble("y")));
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		}).on("endGame", new Emitter.Listener() {
+			@Override
+			public void call(Object... args) {
+				JSONObject objects = (JSONObject) args[0];
+				try {
+					if(objects.getBoolean("win")){
+						result = "You win";
+					}else{
+						result = "You lose";
+					}
+					state = STATE_ENDED;
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
