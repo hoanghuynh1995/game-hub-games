@@ -4,27 +4,43 @@ gameInfo.dexFileName = "Pong.dex";
 gameInfo.className = "pong.Pong";
 gameInfo.downloadPath = "https://ancient-gorge-73625.herokuapp.com/downloads/23af5bf8b9e3037a7675cd3c2a2e6761f5ad0a1f70dc12a66070eda2ef060b71";
 gameInfo.maxGamePlayer = 2;
-
+gameInfo.minGamePlayer = 2;
 var game = {};
 var newGame = function(roomId,player1Id,player2Id){
     game[roomId] = {};
-    game[roomId].player1 = {id:player1Id,pos:{x:20,y:480/2}};
-    game[roomId].player2 = {id:player2Id,pos:{x:770,y:480/2}};
+    game[roomId].player1 = {id:player1Id,isReady:false,pos:{x:20,y:480/2}};
+    game[roomId].player2 = {id:player2Id,isReady:false,pos:{x:770,y:480/2}};
     game[roomId].ballPos = {x:400,y:240};
     game[roomId].ballSpeed = 10;
     game[roomId].transferredData = {};
     game[roomId].ballDir = {x:0,y:0};
-    game[roomId].ballDir.x = randomIntFromInterval(1,10);
-    game[roomId].ballDir.y = game[roomId].ballDir.x/randomIntFromInterval(1,5);
+    game[roomId].ballDir.x = randomIntFromInterval(-10,10);
+    game[roomId].ballDir.y = game[roomId].ballDir.x/randomIntFromInterval(-5,5);
+    game[roomId].ballDir = normalize(game[roomId].ballDir);
+    game[roomId].ballDir.x*=game[roomId].ballSpeed;
+    game[roomId].ballDir.y*=game[roomId].ballSpeed;
     game[roomId].winner = 0;
 }
-
+var resetGame = function(roomId){
+    game[roomId] = {};
+    game[roomId].player1.pos = {x:20,y:480/2};
+    game[roomId].player2.pos = {x:770,y:480/2};
+    game[roomId].ballPos = {x:400,y:240};
+    game[roomId].transferredData = {};
+    game[roomId].ballDir.x = randomIntFromInterval(-10,10);
+    game[roomId].ballDir.y = game[roomId].ballDir.x/randomIntFromInterval(-5,5);
+    game[roomId].ballDir = normalize(game[roomId].ballDir);
+    game[roomId].ballDir.x*=game[roomId].ballSpeed;
+    game[roomId].ballDir.y*=game[roomId].ballSpeed;
+    game[roomId].winner = 0
+}
 var players = {};
 //playerHeight
 var racketHeight = 100;
 var randomIntFromInterval = function(min,max)
 {
-    return Math.floor(Math.random()*(max-min+1)+min);
+    var num = Math.floor(Math.random() * (max - min + 1)) + min;
+    return (num === 0) ? randomIntFromInterval(min, max) : num;
 }
 var hitFactor = function(ballPos,racketPos,racketHeight) {
     // ascii art:
@@ -108,4 +124,5 @@ module.exports.calculateBallPosition = calcBallPos;
 module.exports.calculateBallDirection = calcBallDir;
 module.exports.newGame = newGame;
 module.exports.gameList = game;
+module.exports.resetGame = resetGame;
 

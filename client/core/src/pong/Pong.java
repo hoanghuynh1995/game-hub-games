@@ -1,7 +1,9 @@
 package pong;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -16,7 +18,6 @@ import org.json.JSONObject;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
-
 
 public class Pong extends ApplicationAdapter {
 	private final float UPDATE_TIME = 1/60f;
@@ -118,7 +119,14 @@ public class Pong extends ApplicationAdapter {
 				socket.emit("onCollision");
 			}
 		}else if(state== STATE_ENDED){
-			font.draw(batch,result,800/2 - 40,480/2);
+			font.draw(batch,result,800/2 - 60,480/2 + 50);
+			font.draw(batch,"Tap to exit",800/2 - 90,480/2);
+			if(Gdx.input.isTouched()) {
+				socket.emit("exit");
+				dispose();
+				//Gdx.input.setCatchBackKey(true);
+				Gdx.app.exit();
+			}
 		}
 		batch.end();
 	}
@@ -152,9 +160,7 @@ public class Pong extends ApplicationAdapter {
 
 	@Override
 	public void dispose () {
-		batch.dispose();
-		socket.disconnect();
-		socket.close();
+		super.dispose();
 	}
 
 	public void connectSocket(){

@@ -8,6 +8,7 @@ import android.support.v4.content.ContextCompat;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
+import com.myapp.SimpleEntry;
 
 import java.io.File;
 
@@ -17,7 +18,6 @@ import pong.Pong;
 
 public class AndroidLauncher extends AndroidApplication {
 	private String gameName;
-	Socket socket;
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -26,13 +26,7 @@ public class AndroidLauncher extends AndroidApplication {
 		config.useCompass = false;
 
 		requestPermission();
-		try {
-			socket = IO.socket("http://192.168.0.101:8080");
-			socket.connect();
-		} catch(Exception e){
-			System.out.println(e);
-		}
-		initialize(new Pong(socket), config);
+		initialize(new Pong(SimpleEntry.socket), config);
 	}
 
 	private void requestPermission() {

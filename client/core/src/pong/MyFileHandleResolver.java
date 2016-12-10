@@ -13,8 +13,8 @@ public class MyFileHandleResolver implements FileHandleResolver {
     public FileHandle resolve(String fileName) {
         if (Gdx.files.external(fileName).exists())
             return Gdx.files.external(fileName);
-        else if(Gdx.files.local(fileName).exists())
-            return Gdx.files.local(fileName);
+        else if(Gdx.files.local("Pong" + "/" + fileName).exists())
+            return Gdx.files.local("Pong" + "/" + fileName);
         else
             return Gdx.files.internal(fileName);
     }
