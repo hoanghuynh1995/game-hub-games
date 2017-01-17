@@ -4,10 +4,11 @@ var io = require('socket.io')(server);
 
 var game = require('./game.js');
 
+var rooms = [];
+
 server.listen(8080, function(){
     console.log("Server is now running...");
 });
-
 
 io.on('connection', function(socket){
     var playerId = socket.id;
@@ -15,8 +16,7 @@ io.on('connection', function(socket){
     game.addPlayer(playerId);
     console.log("Player Connected!");
     socket.join(roomId);
-    socket.emit('connected',{name:playerId,gameName:game.gameInfo.gameName,dexFileName:game.gameInfo.dexFileName,
-        className:game.gameInfo.className,downloadPath:game.gameInfo.downloadPath,maxGamePlayer:game.gameInfo.maxGamePlayer});
+    socket.emit('connected',{name:playerId});
     //socket.emit('downloadPath',game.gameInfo.downloadPath);
     socket.on('disconnect', function(){
         console.log("Player Disconnected");
@@ -24,6 +24,69 @@ io.on('connection', function(socket){
         if(io.sockets.adapter.rooms[roomId] == null){
             delete game.gameList[roomId];
         }
+        rooms.forEach(function(item,index){
+            if(item.hostName == playerId){
+                rooms.splice(index,1);
+            }
+        })
+    });
+
+    socket.on('getRooms', function () {
+        socket.emit('getRooms', rooms);
+    });
+    socket.on('removeRoom', function () {
+        rooms.forEach(function (item, index) {
+            if (item.hostName == playerId) {
+                io.emit('removeRoom', item);
+                rooms.splice(index, 1);
+            }
+        });
+    });
+
+    socket.on('createRoom', function (roomName) {
+        var room = {};
+        room.id = new Date().getTime();
+        room.roomName = roomName;
+        room.hostName = playerId;
+        room.roomState = "waiting";
+        room.gameName = game.gameInfo.gameName;
+        rooms.push(room);
+        socket.broadcast.emit('newRoom', room);
+        socket.join(room.id);
+        roomId = room.id;
+        var roomInfo = {};
+        roomInfo.room = room;
+        roomInfo.players = io.sockets.adapter.rooms[room.id].sockets;
+        socket.emit('createRoom', roomInfo);
+        // socket.on('startGame',function(){
+        //     io.to(room.id).emit('startGame');
+        // });
+    });
+    socket.on('joinRoom', function (roomid) {
+        if (io.sockets.adapter.rooms[roomid] != null) {
+            socket.join(roomid);
+            roomId = roomid;
+            for (var i = 0; i < rooms.length; i++) {
+                if (roomid == rooms[i].id) {
+                    var roomInfo = {};
+                    var r = {};
+                    r.id = roomid;
+                    r.roomName = rooms[i].roomName;
+                    r.hostName = rooms[i].hostName;
+                    r.roomState = rooms[i].roomState;
+                    r.gameName = rooms[i].gameName;
+                    roomInfo.room = r;
+                    roomInfo.players = io.sockets.adapter.rooms[roomid].sockets;
+                    socket.emit('joinRoom', roomInfo);
+                    break;
+                }
+            }
+            socket.broadcast.to(roomId).emit('newPlayer', playerId);
+        }
+    });
+    socket.on('leaveRoom', function (roomId) {
+        io.sockets.in(roomId).emit('playerLeft', playerId);
+        roomId = "";
     });
 
     socket.on('startGame',function(){
@@ -34,10 +97,10 @@ io.on('connection', function(socket){
         }
     });
     socket.on('playerMoved',function(data){
-		data.id = socket.id;
+        data.id = socket.id;
         game.updatePlayer(roomId,data);
-		socket.broadcast.emit('playerMoved',data);
-	});
+        socket.broadcast.emit('playerMoved',data);
+    });
     socket.on('ready', function(){
         if(game.gameList[roomId].player1.id == playerId){
             game.gameList[roomId].player1.isReady = true;

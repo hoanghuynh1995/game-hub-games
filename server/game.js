@@ -125,4 +125,3 @@ module.exports.calculateBallDirection = calcBallDir;
 module.exports.newGame = newGame;
 module.exports.gameList = game;
 module.exports.resetGame = resetGame;
-
