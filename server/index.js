@@ -84,6 +84,11 @@ io.on('connection', function(socket){
             socket.broadcast.to(roomId).emit('newPlayer', playerId);
         }
     });
+
+    socket.on('chat',function(data){
+        socket.broadcast.to(data.roomId).emit('chat', {playerName:playerId,message:data.message});
+    });
+
     socket.on('leaveRoom', function (roomId) {
         io.sockets.in(roomId).emit('playerLeft', playerId);
         roomId = "";
